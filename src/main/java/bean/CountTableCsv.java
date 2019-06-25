@@ -1,7 +1,11 @@
 package bean;
 
 import com.opencsv.bean.CsvBindByName;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class CountTableCsv {
     @CsvBindByName(column = "工号-箱头-分箱")
     private String boxId;
@@ -25,107 +29,10 @@ public class CountTableCsv {
     private Integer sortId;
     private Integer serialId;
 
-    public String getBoxId() {
-        return boxId;
-    }
+    private String zhiJiaAssemble;
+    private String zhiJiaAssembleDesc;
+    private String imageCode;
 
-    public void setBoxId(String boxId) {
-        this.boxId = boxId;
-    }
 
-    public String gettGroup() {
-        return tGroup;
-    }
 
-    public void settGroup(String tGroup) {
-        this.tGroup = tGroup;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-
-    public String getNum() {
-        return num;
-    }
-
-    public void setNum(String num) {
-        this.num = num;
-    }
-
-    public String getProduceDate() {
-        return produceDate;
-    }
-
-    public void setProduceDate(String produceDate) {
-        this.produceDate = produceDate;
-    }
-
-    public String getDeliDate() {
-        return deliDate;
-    }
-
-    public void setDeliDate(String deliDate) {
-        this.deliDate = deliDate;
-    }
-
-    public String getDaoXueCode() {
-        return daoXueCode;
-    }
-
-    public void setDaoXueCode(String daoXueCode) {
-        this.daoXueCode = daoXueCode;
-    }
-
-    public String getDaoXueDesc() {
-        return daoXueDesc;
-    }
-
-    public void setDaoXueDesc(String daoXueDesc) {
-        this.daoXueDesc = daoXueDesc;
-    }
-
-    public String getTiLaGanCode() {
-        return tiLaGanCode;
-    }
-
-    public void setTiLaGanCode(String tiLaGanCode) {
-        this.tiLaGanCode = tiLaGanCode;
-    }
-
-    public String getTiLaGanDesc() {
-        return tiLaGanDesc;
-    }
-
-    public void setTiLaGanDesc(String tiLaGanDesc) {
-        this.tiLaGanDesc = tiLaGanDesc;
-    }
-
-    public Integer getSortId() {
-        return sortId;
-    }
-
-    public void setSortId(Integer sortId) {
-        this.sortId = sortId;
-    }
-
-    public Integer getSerialId() {
-        return serialId;
-    }
-
-    public void setSerialId(Integer serialId) {
-        this.serialId = serialId;
-    }
 }

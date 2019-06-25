@@ -28,6 +28,9 @@ public class FastRun {
         CsvFactory.getInstance().importDaoXue(dir + map.get("daoxue"));
         CsvFactory.getInstance().importLiZhu(dir + map.get("lizhu"));
         CsvFactory.getInstance().importTiLagan(dir + map.get("tilangan"));
+        System.out.println(map);
+        CsvFactory.getInstance().importZhiJiaAssemble(dir + map.get("zhijia"));
+        CsvFactory.getInstance().importImageCode(dir + map.get("imagecode"));
 
         //提取立柱
         lizhuList = CsvFactory.countTableCsvs.stream().filter((obj) -> "立柱组合".equals(obj.getDesc()) || StringUtils.startsWith(obj.getDesc(), "立柱装配")).collect(Collectors.toList());
@@ -59,17 +62,23 @@ public class FastRun {
             }
             return obj;
         }).collect(Collectors.toList());
-        //按导靴-提拉杆-物料编码 排序
-        lizhuList.sort((c1, c2) -> {
-            if (StringUtils.equals(c1.getDaoXueCode(), c2.getDaoXueCode())) {
-                return StringUtils.compare(c1.getTiLaGanCode(), c2.getTiLaGanCode());
-            } else if (StringUtils.equals(c1.getDaoXueCode(), c2.getDaoXueCode())) {
-                return StringUtils.compare(c1.getDaoXueCode(), c2.getDaoXueCode());
-            } else {
-                return StringUtils.compare(c1.getCode(), c2.getCode());
+        //匹配支架装配
+        Map<String, ZhijiaAssemble> zhiJiaExist = CsvFactory.zhijiaAssembleCsvs.stream().collect(Collectors.toMap(ZhijiaAssemble::getId, obj -> obj, (k1, k2) -> k1));
+        lizhuList = lizhuList.stream().map((obj) -> {
+            if (zhiJiaExist.containsKey(obj.getCode())) {
+                obj.setZhiJiaAssemble(zhiJiaExist.get(obj.getCode()).getCode());
+                obj.setZhiJiaAssembleDesc(zhiJiaExist.get(obj.getCode()).getDesc());
             }
-        });
-
+            return obj;
+        }).collect(Collectors.toList());
+        //匹配立柱图号
+        Map<String, ImageCode> imageCodeExist = CsvFactory.imageCodeCsvs.stream().collect(Collectors.toMap(ImageCode::getId, obj -> obj, (k1, k2) -> k1));
+        lizhuList = lizhuList.stream().map((obj) -> {
+            if (imageCodeExist.containsKey(obj.getCode())) {
+                obj.setImageCode(imageCodeExist.get(obj.getCode()).getPicNum());
+            }
+            return obj;
+        }).collect(Collectors.toList());
 
         Map<String, List<CountTableCsv>> listMap;
         /*给相同的物料编码赋值*/
@@ -84,15 +93,15 @@ public class FastRun {
                 .collect(Collectors.groupingBy(obj -> "other"));
         CommonUtil.putOneOrTwo(listMap);
 
-        /*导靴提拉杆都为空，按梯种分*/
+        /*导靴提拉杆都为空，按支架装配 分*/
         listMap = lizhuList.stream()
-                .filter(obj -> obj.getSortId() == null && StringUtils.isAllBlank(obj.getDaoXueCode(), obj.getTiLaGanCode()))
+                .filter(obj -> obj.getSortId() == null && StringUtils.isAllBlank(obj.getDaoXueCode(), obj.getZhiJiaAssemble()))
                 .collect(Collectors.groupingBy(obj -> {
-                    String tGroup = obj.gettGroup();
+                    String tGroup = obj.getTGroup();
                     if (tGroup != null && tGroup.split("-").length > 0) {
                         return CommonUtil.nullToStr(tGroup.split("-")[0]);
                     }
-                    return CommonUtil.nullToStr(obj.gettGroup());
+                    return CommonUtil.nullToStr(obj.getTGroup());
                 }));
         CommonUtil.putOneOrTwo(listMap);
 
@@ -144,40 +153,34 @@ public class FastRun {
             if (!c1.getSortId().equals(c2.getSortId())) {
                 return Integer.compare(c1.getSortId(), c2.getSortId());
             }
-            if (Integer.valueOf(1).equals(c1.getSortId())) {
-                String tGroup = c1.gettGroup();
-                String tGroupOther = c2.gettGroup();
-                int tGroupImportant = StringUtils.startsWithAny(tGroup, "LCA", "LGE") ? 0 : 1;
-                int tGroupOtherImportant = StringUtils.startsWithAny(tGroupOther, "LCA", "LGE") ? 0 : 1;
-                if ((tGroupImportant ^ tGroupOtherImportant) == 1) {
-                    return Integer.compare(tGroupImportant, tGroupOtherImportant);
+
+            //两个都有的排在前面
+            int emptyCountC1 = (StringUtils.isNotBlank(c1.getTiLaGanCode()) ? 0 : 4) + (StringUtils.isNotBlank(c1.getDaoXueCode()) ? 0 : 2)+(StringUtils.isNotBlank(c1.getZhiJiaAssemble())?0:1);
+            int emptyCountC2 = (StringUtils.isNotBlank(c2.getTiLaGanCode()) ? 0 : 4) + (StringUtils.isNotBlank(c2.getDaoXueCode()) ? 0 : 2)+(StringUtils.isNotBlank(c2.getZhiJiaAssemble())?0:1);
+            if (c1.getSortId() == 1) {
+                if (emptyCountC1 == 6) {
+                    emptyCountC1 =-1;
                 }
-            } else {
-                int c1SortNum = StringUtils.startsWithAny(c1.gettGroup(), "LCA", "LGE") ? 2 : 1;
-                int c2SortNum = StringUtils.startsWithAny(c2.gettGroup(), "LCA", "LGE") ? 2 : 1;
-                if (c1SortNum == 1 && StringUtils.isAllBlank(c1.getDaoXueCode(), c1.getTiLaGanCode())) {
-                    c1SortNum = 3;
-                }
-                if (c2SortNum == 1 && StringUtils.isAllBlank(c2.getDaoXueCode(), c2.getTiLaGanCode())) {
-                    c2SortNum = 3;
-                }
-                if (c1SortNum != c2SortNum) {
-                    return Integer.compare(c1SortNum, c2SortNum);
+                if (emptyCountC2 == 6) {
+                    emptyCountC2 =-1;
                 }
             }
-            //两个都有的排在前面
-            int emptyCountC1 = (StringUtils.isNotBlank(c1.getTiLaGanCode()) ? 0 : 1) + (StringUtils.isNotBlank(c1.getDaoXueCode()) ? 0 : 1);
-            int emptyCountC2 = (StringUtils.isNotBlank(c2.getTiLaGanCode()) ? 0 : 1) + (StringUtils.isNotBlank(c2.getDaoXueCode()) ? 0 : 1);
             if (emptyCountC1 != emptyCountC2) {
                 return Integer.compare(emptyCountC1, emptyCountC2);
             }
-
+            if (!CommonUtil.nullToStr(c1.getZhiJiaAssemble()).equals(CommonUtil.nullToStr(c2.getZhiJiaAssemble()))) {
+                return CommonUtil.compare(c1.getZhiJiaAssemble(), c2.getZhiJiaAssemble());
+            }
             if (!CommonUtil.nullToStr(c1.getDaoXueCode()).equals(CommonUtil.nullToStr(c2.getDaoXueCode()))) {
                 return CommonUtil.compare(c1.getDaoXueCode(), c2.getDaoXueCode());
             }
             if (!CommonUtil.nullToStr(c1.getTiLaGanCode()).equals(CommonUtil.nullToStr(c2.getTiLaGanCode()))) {
 
                 return CommonUtil.compare(c1.getTiLaGanCode(), c2.getTiLaGanCode());
+            }
+            if (!CommonUtil.nullToStr(c1.getImageCode()).equals(CommonUtil.nullToStr(c2.getImageCode()))) {
+
+                return CommonUtil.compare(c1.getImageCode(), c2.getImageCode());
             }
             return CommonUtil.compare(c1.getCode(), c2.getCode());
 
@@ -249,6 +252,9 @@ public class FastRun {
         tableOrderMap.put("物料要求送货日期", 8);
         tableOrderMap.put("生产线", 9);
         tableOrderMap.put("序号", 10);
+        tableOrderMap.put("支架装配", 15);
+        tableOrderMap.put("支架装配-物料描述", 16);
+        tableOrderMap.put("立柱图号", 17);
 
 
         try {
@@ -292,6 +298,9 @@ public class FastRun {
         map.put("tilangan", properties.getProperty("tilangan"));
         map.put("lizhu", properties.getProperty("lizhu"));
         map.put("daoxue", properties.getProperty("daoxue"));
+        map.put("zhijia", properties.getProperty("zhijia"));
+        map.put("imagecode", properties.getProperty("imagecode"));
+
         return map;
     }
 }

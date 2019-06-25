@@ -1,7 +1,4 @@
-import bean.CountTableCsv;
-import bean.DaoXueCsv;
-import bean.LiZhuCsv;
-import bean.TiLaganCsv;
+import bean.*;
 import com.opencsv.bean.CsvToBeanBuilder;
 
 import java.io.*;
@@ -12,6 +9,8 @@ public class CsvFactory {
     public static List<CountTableCsv> countTableCsvs;
     public static List<LiZhuCsv> liZhuCsvs;
     public static List<TiLaganCsv> tiLaganCsvs;
+    public static List<ZhijiaAssemble> zhijiaAssembleCsvs;
+    public static List<ImageCode> imageCodeCsvs;
     private static CsvFactory csvFactory=new CsvFactory();
     private CsvFactory(){}
     public static CsvFactory getInstance(){
@@ -49,6 +48,24 @@ public class CsvFactory {
             DataInputStream in = new DataInputStream(new FileInputStream(filename));
             tiLaganCsvs = new CsvToBeanBuilder(new InputStreamReader(in,"gbk"))
                     .withType(TiLaganCsv.class).build().parse();
+        } catch (FileNotFoundException |UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+    public void importZhiJiaAssemble(String filename){
+        try {
+            DataInputStream in = new DataInputStream(new FileInputStream(filename));
+            zhijiaAssembleCsvs = new CsvToBeanBuilder(new InputStreamReader(in,"gbk"))
+                    .withType(ZhijiaAssemble.class).build().parse();
+        } catch (FileNotFoundException |UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+    public void importImageCode(String filename){
+        try {
+            DataInputStream in = new DataInputStream(new FileInputStream(filename));
+            imageCodeCsvs = new CsvToBeanBuilder(new InputStreamReader(in,"gbk"))
+                    .withType(ImageCode.class).build().parse();
         } catch (FileNotFoundException |UnsupportedEncodingException e) {
             e.printStackTrace();
         }

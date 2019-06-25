@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TiLaganCsv {
+public class ZhijiaAssemble {
     @CsvBindByName(column = "工号")
     public String id;
     @CsvBindByName(column = "物料编码")
